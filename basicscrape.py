@@ -1,7 +1,7 @@
 from recipe_scrapers import scrape_me
 import ast
 import json
-import User
+from User import User
 
 # give the url as a string, it can be url from any site listed below
 
@@ -31,26 +31,28 @@ def recommend(userprof):
 			maxrecipe = recipe
 	return maxrecipe
 
-def create_history(user):
+def create_user():
 	user_history = []
 	for i in range(100):
 		k = random.randint(1,359)
 		user_history.append(recipe_names[k])
 	new_user = User(user_history)
-
+	return new_user
 
 recipe_dict = json.load(open("recipe_dict.txt"))
 recipe_names = json.load(open("recipe_names.txt"))
 recipe_list = list(recipe_dict.keys())
-print(recipe_dict)
-print(recipe_names)
-print(recipe_list)
+# print(recipe_dict)
+# print(recipe_names)
+# print(recipe_list)
 print("Available Selection:", recipe_names)
 print("Select a recipe history using recipe indices above:")
 indices = input()
 history_lst = [int(x) for x in indices.split(" ")]
 print(history_lst)
 user_profile = [0]*profile_length
+user_list = [create_user() for i in range(20)]
+print(user_list)
 
 for index in history_lst:
 	recipe_profile = recipe_dict[recipe_list[index]]['profile']

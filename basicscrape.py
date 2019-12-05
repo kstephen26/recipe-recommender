@@ -6,7 +6,7 @@ from user import User
 
 # give the url as a string, it can be url from any site listed below
 
-profile_length = 6
+profile_length = 8
 recipe_dict = {}
 recipe_names = {}
 recipe_list = []

@@ -19,9 +19,9 @@ def read_data():
 
 	i = 0
 
-	#for recipe in recipes:
-	for x in range(200, 210):
-		recipe = recipes[x]
+	for recipe in recipes:
+	#for x in range(200, 210):
+		#recipe = recipes[x]
 		scraper = scrape_me(recipe.rstrip())
 		title = scraper.title()
 

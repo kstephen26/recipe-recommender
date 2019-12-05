@@ -77,14 +77,40 @@ def create_user():
 
 recipe_dict = json.load(open("recipe_dict.txt"))
 recipe_names = json.load(open("recipe_names.txt"))
+recipe_namesrev = {}
+for number in recipe_names:
+	recipe_namesrev[recipe_names[number]] = number
+# print(recipe_namesrev)
+
 recipe_list = list(recipe_dict.keys())
 # print(recipe_dict)
-print(recipe_names)
+# print(recipe_names)
 # print(recipe_list)
-print("Available Selection:", recipe_names)
-print("Select a recipe history using recipe indices above:")
-indices = input()
-history_lst = [int(x) for x in indices.split(" ")]
+# print("Available Selection:", recipe_names)
+# print("Select a recipe history using recipe indices above:")
+# indices = input()
+
+print("How many recipes would you like to add to your recipe history?")
+history_length = int(input())
+
+history_lst = [0]*history_length
+
+for i in range(history_length):
+	outpt = []
+	if i == 0:
+		print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
+	else:
+		print("Added! Pick another recipe. Enter one or more space-separated keywords:")
+	keywords = input().split(" ")
+	for word in keywords:
+		print("word is: ", word)
+		# print(recipe_dict.keys())
+		outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
+	print(outpt)
+	print("Pick one recipe from the selection above by entering the recipe number.")
+	history_lst[i] = int(input())
+
+# history_lst = [int(x) for x in indices.split(" ")]
 # print(history_lst)
 
 

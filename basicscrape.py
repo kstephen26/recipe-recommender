@@ -10,6 +10,14 @@ profile_length = 6
 recipe_dict = {}
 recipe_names = {}
 recipe_list = []
+recipe_dict = json.load(open("recipe_dict.txt"))
+recipe_names = json.load(open("recipe_names.txt"))
+recipe_namesrev = {}
+for number in recipe_names:
+	recipe_namesrev[recipe_names[number]] = number
+# print(recipe_namesrev)
+
+recipe_list = list(recipe_dict.keys())
 
 def cosine_sim(l1, l2):
 	if len(l1) != len(l2):
@@ -98,15 +106,6 @@ def create_user():
 		user_history.append(recipe_names[str(k)])
 	new_user = User(user_history)
 	return new_user
-
-recipe_dict = json.load(open("recipe_dict.txt"))
-recipe_names = json.load(open("recipe_names.txt"))
-recipe_namesrev = {}
-for number in recipe_names:
-	recipe_namesrev[recipe_names[number]] = number
-# print(recipe_namesrev)
-
-recipe_list = list(recipe_dict.keys())
 # print(recipe_dict)
 # print(recipe_names)
 # print(recipe_list)

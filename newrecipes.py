@@ -24,8 +24,6 @@ def read_data():
 		recipe = recipes[x]
 		scraper = scrape_me(recipe.rstrip())
 		title = scraper.title()
-		print(scraper.ingredients())
-		print(scraper.yields())
 
 		if title not in recipe_dict:
 

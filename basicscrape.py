@@ -2,7 +2,9 @@ from recipe_scrapers import scrape_me
 import ast
 import json
 import random
+import smartusers
 from user import User
+import numpy as np
 
 # give the url as a string, it can be url from any site listed below
 
@@ -106,6 +108,28 @@ def create_user():
 		user_history.append(recipe_names[str(k)])
 	new_user = User(user_history)
 	return new_user
+
+def makematrix(userlist):
+	maxid = max([user.id for user in userlist])
+	reclen = len(recipe_list)
+	userlen = len(userlist)
+	outpt = [ ([0] * reclen) for row in range(maxid) ]
+	# outpt = [[0]*reclen]*maxid
+	# print(outpt)
+	# for i in range(userlen):
+	# 	for j in recipe_names:
+	# 		if 
+	# 		outpt[i][j] = 
+	for user in userlist:
+		# print("user id: ", user.id)
+		for j in recipe_names:
+			if recipe_names[j] in user.favorites:
+				# print(user.id)
+				# print((user.id - 1, int(j)))
+				outpt[user.id - 1][int(j)] = user.reciperatings[recipe_names[j]]
+		# print(outpt)
+	return outpt
+
 # print(recipe_dict)
 # print(recipe_names)
 # print(recipe_list)
@@ -113,7 +137,8 @@ def create_user():
 # print("Select a recipe history using recipe indices above:")
 # indices = input()
 
-system_type = 'Item-Item'
+# system_type = 'Item-Item'
+system_type = 'Matrix Factorization'
 
 if system_type == 'Item-Item':
 	print("How many recipes would you like to add to your recipe history (at least 5)?")
@@ -134,6 +159,40 @@ if system_type == 'Item-Item':
 		print("You might like this recipe.")
 	else:
 		print("You might want to keep looking :/")
+
+elif system_type == 'Matrix Factorization':
+	print("How many recipes would you like to add to your recipe history (at least 5)?")
+	history_length = int(input())
+	print("Selection: ", recipe_names)
+	history_lst = [[0,0]]*history_length
+	for i in range(history_length):
+		print("Enter a recipe number and rating from the above selection separated by a space.")
+		history_lst[i] = [int(x) for x in input().split(" ")]
+	print(history_lst)
+	actuallist = [x[0] for x in history_lst]
+	ouruser = User(actuallist,25)
+	ouruser.reciperatings = dict(history_lst)
+	print("Now, enter the number of a recipe you'd like to try.")
+	idea = int(input())
+
+	user_list = smartusers.smart_user_list
+	user_list.append(ouruser)
+	matrx = makematrix(user_list)
+	QR = np.linalg.qr(matrx)
+	# print(QR[0].shape)
+	Q = QR[0]
+	R = QR[1]
+	Rt = np.transpose(R)
+	# print(QR[1].shape)
+	rating = np.dot(Q[-1],Rt[idea])
+	print(rating)
+	# print(rating)
+	# print(QR[1])
+	# for user in user_list:
+	# 	print(user.reciperatings)
+
+
+	# Create the user-rating matrix
 
 else:
 	print("How many recipes would you like to add to your recipe history?")
@@ -159,7 +218,8 @@ else:
 	# print(history_lst)
 
 
-	user_list = [create_user() for i in range(20)]
+	# user_list = [create_user() for i in range(20)]
+	user_list = smartusers.smart_user_list
 	# print(user_list)
 	for user in user_list:
 		userprofile(user)
@@ -173,4 +233,4 @@ else:
 	user_profile = [x/profile_length for x in user_profile]
 
 	print("Content Recommendation: ", contentrecommend(user_profile))
-	print(useruser(user_profile, user_list))
+	print("User-User CBF Recommendation: ", useruser(user_profile, user_list))

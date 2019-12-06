@@ -2,6 +2,7 @@ from recipe_scrapers import scrape_me
 import ast
 import json
 import random
+import sys
 import smartusers
 from user import User
 import numpy as np
@@ -65,12 +66,8 @@ def contentrate(userprof, idea):
 
 def itemitemcollab(idea, history, k):
 	# idea is the index of a recipe idea, history is the list of index and rating tuples of recipes cooked in the past. k is neighborhood size.
-	print("idea ", idea)
-	print("history", history)
-	global itemitemhistory
 	reclist = []
 	userprof = recipe_dict[recipe_names[idea]]['profile']
-	print("history is "), itemitemhistory
 	history_length = len(history)
 	for recipe, rating in history:
 		profile = recipe_dict[recipe_names[str(recipe)]]['profile']
@@ -201,7 +198,7 @@ if option == 'recommend':
 					print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
 				else:
 					print("Added! Pick another recipe. Enter one or more space-separated keywords:")
-				keywords = input().split(" ")
+				keywords = input().strip().split(" ")
 				for word in keywords:
 					outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
 				print(outpt)
@@ -220,7 +217,7 @@ if option == 'recommend':
 		elif system_type == 'collaborative':
 			print_recipes_index()
 			print("Enter numeric keys for your favorite recipes, space-separated:")
-			history_nums_lst = input().split()
+			history_nums_lst = input().strip().split()
 			history_lst = [recipe_names[num] for num in history_nums_lst]
 			#print(history_lst)
 			## Creating dummy user profiles
@@ -245,10 +242,14 @@ if option == 'recommend':
 
 if option == 'rate':
 
-	print("What type of rater would you like ('itemitem', 'useruser', 'contentbased', or 'Hybrid'): ")
+	print("What type of rater would you like ('itemitem', 'useruser', 'contentbased', or 'hybrid'): ")
 	system_type = input()
+	systemlist = ['itemitem', 'useruser', 'contentbased', 'hybrid']
 
-	if system_type == 'Hybrid':
+	if system_type not in systemlist:
+		print("You'll have to run this program again and enter a string corresponding to the system you'd like to select.")
+
+	if system_type == 'hybrid':
 		alpha = 0.3333
 		beta = 0.3333
 		gamma = 0.3333
@@ -267,8 +268,12 @@ if option == 'rate':
 			history_lst = [[0,0]]*history_length
 			for i in range(history_length):
 				print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
-				history_lst[i] = [int(x) for x in input().split(" ")]
-			#print(history_lst)
+				currhistory = [int(x) for x in input().strip().split(" ")]
+				if len(currhistory) != 2 or currhistory[0] > 359 or currhistory[0] < 0 or currhistory[1] > 5 or currhistory[1] < 0:
+					print('The recipe or rating you have submitted is invalid. Try again.')	
+					i -= 1	
+				else:
+					history_lst[i] = currhistory	
 			print("Your inputted recipe names: rating'")
 			for item in history_lst:
 				print(recipe_names[str(item[0])]+": "+str(item[1]))
@@ -332,7 +337,12 @@ if option == 'rate':
 		history_lst = [[0,0]]*history_length
 		for i in range(history_length):
 			print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
-			history_lst[i] = [int(x) for x in input().split(" ")]
+			currhistory = [int(x) for x in input().strip().split(" ")]
+			if len(currhistory) != 2 or currhistory[0] > 359 or currhistory[0] < 0 or currhistory[1] > 5 or currhistory[1] < 0:
+				print('The recipe or rating you have submitted is invalid. Try again.')	
+				i -= 1	
+			else:
+				history_lst[i] = currhistory
 		print("Your inputted recipe names: rating'")
 		for item in history_lst:
 			print(recipe_names[str(item[0])]+": "+str(item[1]))
@@ -381,13 +391,10 @@ if option == 'rate':
 			rating = np.dot(Q[-1],Rt[idea])
 
 		print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
-			if rating > 4:
-				print("It seems like you would love this recipe!")
-			elif rating > 3:
-				print("You might like this recipe.")
-			else:
-				print("You might want to keep looking :/")
-
+		if rating > 4:
+			print("It seems like you would love this recipe!")
+		elif rating > 3:
+			print("You might like this recipe.")
 		else:
-			print("You'll have to run this program again and enter a string corresponding to the system you'd like to select.")
+			print("You might want to keep looking :/")
 		

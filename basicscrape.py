@@ -157,10 +157,10 @@ system_type = input()
 
 if system_type == 'itemitem':
 	history_length = 0
-	while history_length <= 5:
+	while history_length < 5:
 		print("How many recipes would you like to add to your recipe history (at least 5)?")
 		history_length = int(input())
-		if history_length <= 5:
+		if history_length < 5:
 			print("Recipe history size too small. Let's try again.")
 	print_recipes_index()
 	history_lst = [[0,0]]*history_length
@@ -207,7 +207,24 @@ elif system_type == 'useruser':
 	print("Enter numeric keys for your favorite recipes, space-separated:")
 	history_nums_lst = input().split()
 	history_lst = [recipe_names[num] for num in history_nums_lst]
-	print(history_lst)
+	#print(history_lst)
+	## Creating dummy user profiles
+	user_list = [create_user() for i in range(20)]
+	# print(user_list)
+	for user in user_list:
+		userprofile(user)
+
+	user_profile = [0]*profile_length
+	for current_recipe_name in history_lst:
+		recipe_profile = recipe_dict[current_recipe_name]['profile']
+		for i in range(profile_length):
+			user_profile[i] += recipe_profile[i]
+	user_profile = [x/profile_length for x in user_profile]
+	rec_recipe = useruser(user_profile, user_list)
+	print("Recommended Recipe:",rec_recipe)
+	cos_sim = cosine_sim(user_profile, recipe_dict[rec_recipe]['profile'])
+	print(cos_sim)
+
 
 
 elif system_type == 'Matrix Factorization':

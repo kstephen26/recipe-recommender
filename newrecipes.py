@@ -18,18 +18,16 @@ def read_data():
 	num_recipes = len(recipes)
 
 	i = 0
-
+	count = 0
 	for recipe in recipes:
-	#for x in range(200, 210):
+	#for x in range(100):
 		#recipe = recipes[x]
+		print(count)
+		count+=1
 		scraper = scrape_me(recipe.rstrip())
 		title = scraper.title()
-
 		if title not in recipe_dict:
-
 			servings = int(scraper.yields().split()[0])
-			print(servings)
-			
 			recipe_dict[title] = {'time':scraper.total_time(), 'yields': servings, 'ingredients': scraper.ingredients(), 'instructions': scraper.instructions(), 'profile': [0 for _ in range(profile_length)]}
 			recipe_names[i] = title
 			recipe_list.append(title)

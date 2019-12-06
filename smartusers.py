@@ -18,10 +18,10 @@ def create_user():
 	for i in range(100):
 		k = random.randint(1,359)
 		user_history.append(recipe_names[str(k)])
-	new_user = User(user_history)
+	new_user = User(user_history,1)
 	return new_user
 
-def create_smart_user(keyword):
+def create_smart_user(keyword, idf):
 	p = 0.9
 	user_history = []
 	for recipe in recipe_names:
@@ -40,19 +40,29 @@ def create_smart_user(keyword):
 				l = random.randint(1,359)
 				user_history.append(recipe_names[str(l)])
 
-	new_user = User(user_history)
+	new_user = User(user_history,idf)
 	new_user.type = keyword
 	return new_user
 
-user_list = []
-user_list.extend([create_smart_user('indian') for i in range(3)])
-user_list.extend([create_smart_user('thai') for i in range(3)])
-user_list.extend([create_smart_user('italian') for i in range(3)])
-user_list.extend([create_smart_user('cake') for i in range(3)])
-user_list.extend([create_smart_user('easy') for i in range(3)])
-user_list.extend([create_smart_user('cookies') for i in range(3)])
 
-for user in user_list:
-	print("User type is: ", user.type)
-	print("User recipes are: ", user.favorites)
+smart_user_list = []
+smart_user_list.extend([create_smart_user('indian',i) for i in range(1,5)])
+smart_user_list.extend([create_smart_user('thai',i) for i in range(5,9)])
+smart_user_list.extend([create_smart_user('italian',i) for i in range(9,13)])
+smart_user_list.extend([create_smart_user('cake',i) for i in range(13,17)])
+smart_user_list.extend([create_smart_user('easy',i) for i in range(17,21)])
+smart_user_list.extend([create_smart_user('cookies',i) for i in range(21,25)])
+
+# with open('smartusers.txt', 'w') as f:
+#     for user in user_list:
+#         f.write('%s\n' % user)
+
+# nulist = []
+
+# with open('smartusers.txt', 'r') as f:
+#     nulist = [x.rstrip() for x in f.readlines()]
+
+# for user in nulist:
+# 	print("User type is: ", user.type)
+# 	print("User recipes are: ", user.favorites)
 

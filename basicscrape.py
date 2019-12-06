@@ -2,6 +2,7 @@ from recipe_scrapers import scrape_me
 import ast
 import json
 import random
+import sys
 import smartusers
 from user import User
 import numpy as np
@@ -64,12 +65,8 @@ def contentrate(userprof, idea):
 # Item-item collaborative filtering, rating a given recipe out of 5 stars based on a user's history
 def itemitemcollab(idea, history, k):
 	# idea is the index of a recipe idea, history is the list of index and rating tuples of recipes cooked in the past. k is neighborhood size.
-	#print("idea ", idea)
-	#print("history", history)
-	global itemitemhistory
 	reclist = []
 	userprof = recipe_dict[recipe_names[idea]]['profile']
-	#print("history is "), itemitemhistory
 	history_length = len(history)
 	for recipe, rating in history:
 		profile = recipe_dict[recipe_names[str(recipe)]]['profile']
@@ -392,3 +389,4 @@ if option == 'rate':
 			print("You might like this recipe.")
 		else:
 			print("You might want to keep looking :/")
+		

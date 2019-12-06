@@ -18,10 +18,9 @@ recipe_namesrev = {}
 itemitemhistory = []
 for number in recipe_names:
 	recipe_namesrev[recipe_names[number]] = number
-# print(recipe_namesrev)
-
 recipe_list = list(recipe_dict.keys())
 
+# Cosine similarity scores of two user/recipe profiles
 def cosine_sim(l1, l2):
 	if len(l1) != len(l2):
 		return None
@@ -32,6 +31,7 @@ def cosine_sim(l1, l2):
 		n1 += l1[i]*l2[i]
 	return n1/(d1*d2)
 
+# Generates an average of a user's recipe profiles to numerically represent their aggregated preferences
 def userprofile(user):
 	recipes = user.favorites
 	user_profile = [0]*profile_length
@@ -44,6 +44,7 @@ def userprofile(user):
 	return user_profile
 
 # Content-based recommendation. First option is the given recipe.
+# Returns the top four recommendations based on cosine similarity
 def contentrecommend(userprof):
 	maxsim = 0
 	maxrecipe = "hello"
@@ -52,25 +53,23 @@ def contentrecommend(userprof):
 		profile = recipe_dict[recipe]['profile']
 		sim = cosine_sim(userprof, profile)
 		reclist.append([recipe,sim])
-		# if sim > maxsim:
-		# 	maxsim = sim
-		# 	maxrecipe = recipe
 	reclist = sorted(reclist, key=lambda lst: lst[1], reverse = True)
 	reclist = [x[0] for x in reclist]
 	return reclist[:4]
 
-# Content-based recommendation. First option is the given recipe.
+# Content-based rating of a given recipe (out of 5 stars). First option is the given recipe.
 def contentrate(userprof, idea):
 	return round(5*cosine_sim(userprof, recipe_dict[recipe_names[str(idea)]]['profile']))
 
+# Item-item collaborative filtering, rating a given recipe out of 5 stars based on a user's history
 def itemitemcollab(idea, history, k):
 	# idea is the index of a recipe idea, history is the list of index and rating tuples of recipes cooked in the past. k is neighborhood size.
-	print("idea ", idea)
-	print("history", history)
+	#print("idea ", idea)
+	#print("history", history)
 	global itemitemhistory
 	reclist = []
 	userprof = recipe_dict[recipe_names[idea]]['profile']
-	print("history is "), itemitemhistory
+	#print("history is "), itemitemhistory
 	history_length = len(history)
 	for recipe, rating in history:
 		profile = recipe_dict[recipe_names[str(recipe)]]['profile']
@@ -86,7 +85,7 @@ def itemitemcollab(idea, history, k):
 	rating = num/denom
 	return rating
 	
-
+# User-user collaborative filtering, generating a novel recommendation based on user and peer profiles
 def useruser(userprof,peer_list):
 	similar_peers = []
 	k = 5
@@ -94,8 +93,6 @@ def useruser(userprof,peer_list):
 		sim = cosine_sim(userprof, peer.profile)
 		similar_peers.append([sim, peer])
 	similar_peers = sorted(similar_peers, key=lambda lst: lst[0], reverse = True)
-	# print(similar_peers)
-
 	compiled_recipes = {}
 	for i in range(k):
 		sim, peer = similar_peers[i]
@@ -105,11 +102,9 @@ def useruser(userprof,peer_list):
 				compiled_recipes[recipe] += 1
 			else:
 				compiled_recipes[recipe] = 1
-	# print(compiled_recipes)
 	return max(compiled_recipes, key=compiled_recipes.get)
-	# print("lcd is: ", lcd)
-	# print("occurrence: ", compiled_recipes[lcd])
 
+# Uses user-user collorative filtering to generate a rating (out of 5 stars) for a given "idea" recipe
 def useruserrate(idea, userprof, peer_list):
 	similar_peers = []
 	k = 5
@@ -117,25 +112,22 @@ def useruserrate(idea, userprof, peer_list):
 		sim = cosine_sim(userprof, peer.profile)
 		similar_peers.append([sim, peer])
 	similar_peers = sorted(similar_peers, key=lambda lst: lst[0], reverse = True)
-	# print(similar_peers)
-
 	num = 0
 	denom = 0
 	if int(idea) > 359:
 		return "Idea not in recipe database"
-
 	targetrec = recipe_names[idea]
 	for i in range(k):
 		peer = similar_peers[i][1]
 		if targetrec in peer.reciperatings:
 			num += similar_peers[i][0]*peer.reciperatings[targetrec]
 			denom += abs(similar_peers[i][0])
-
 	if denom == 0:
 		return None
 	else:
 		return num/denom
 
+# Creates a simple user with a randomized history
 def create_user():
 	user_history = []
 	for i in range(100):
@@ -216,6 +208,8 @@ if system_type == 'itemitem':
 		print("You might want to keep looking :/")
 
 elif system_type == 'contentbased':
+	## UNCOMMENT THIS CODE AND COMMENT THE REST OF THE CODE IN THIS CONDITIONAL TO GET A SIMPLE, KEYWORD-FREE CONTENT-BASED RECOMMENDATION
+	# 	print_recipes_index()
 	# print("Enter a recipe number from above to get a similar content-based recommendation: ")
 	# base_recipe = input()
 	# base_name = recipe_names[base_recipe]
@@ -226,10 +220,8 @@ elif system_type == 'contentbased':
 	# print("Your top recommendation is:",rec_list[0])
 	# cos_sim = cosine_sim(base_profile, recipe_dict[rec_list[0]]['profile'])
 	# print("Cosine similarity between selection and recommendation (0 to 1):", str(cos_sim))
-	#results = [(rec, cosine_sim(base_profile, recipe_dict[rec]['profile'])) for rec in rec_list]
-	#print(results)
-	#print(rec_list)
 
+	# COMMENT/UNCOMMENT THE REST OF THIS CODE UNTIL THE END OF THE CONDITIONAL CLAUSE TO TURN OFF/ON SMART KEYWORD SUGGESTIONS
 	print_recipes_index()
 	print("How many recipes would you like to add to your recipe history?")
 	history_length = int(input())
@@ -262,13 +254,10 @@ elif system_type == 'useruser':
 	print("Enter numeric keys for your favorite recipes, space-separated:")
 	history_nums_lst = input().split()
 	history_lst = [recipe_names[num] for num in history_nums_lst]
-	#print(history_lst)
 	## Creating dummy user profiles
 	user_list = [create_user() for i in range(20)]
-	# print(user_list)
 	for user in user_list:
 		userprofile(user)
-
 	user_profile = [0]*profile_length
 	for current_recipe_name in history_lst:
 		recipe_profile = recipe_dict[current_recipe_name]['profile']
@@ -279,8 +268,6 @@ elif system_type == 'useruser':
 	print("Recommended Recipe:",rec_recipe)
 	cos_sim = cosine_sim(user_profile, recipe_dict[rec_recipe]['profile'])
 	print("Similarity: ", cos_sim)
-
-
 
 elif system_type == 'Matrix Factorization':
 	print("How many recipes would you like to add to your recipe history (at least 5)?")
@@ -296,22 +283,16 @@ elif system_type == 'Matrix Factorization':
 	ouruser.reciperatings = dict(history_lst)
 	print("Now, enter the number of a recipe you'd like to try.")
 	idea = int(input())
-
 	user_list = smartusers.smart_user_list
 	user_list.append(ouruser)
 	matrx = makematrix(user_list)
 	QR = np.linalg.qr(matrx)
-	# print(QR[0].shape)
 	Q = QR[0]
 	R = QR[1]
 	Rt = np.transpose(R)
-	# print(QR[1].shape)
 	rating = np.dot(Q[-1],Rt[idea])
 	print(rating)
-	# print(rating)
-	# print(QR[1])
-	# for user in user_list:
-	# 	print(user.reciperatings)
+
 elif system_type == 'Hybrid':
 	alpha = 0.3333
 	beta = 0.3333

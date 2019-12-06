@@ -57,7 +57,11 @@ def contentrecommend(userprof):
 		# 	maxrecipe = recipe
 	reclist = sorted(reclist, key=lambda lst: lst[1], reverse = True)
 	reclist = [x[0] for x in reclist]
-	return reclist
+	return reclist[:4]
+
+# Content-based recommendation. First option is the given recipe.
+def contentrate(userprof, idea):
+	return round(5*cosine_sim(userprof, recipe_dict[recipe_names[str(idea)]]['profile']))
 
 def itemitemcollab(idea, history, k):
 	# idea is the index of a recipe idea, history is the list of index and rating tuples of recipes cooked in the past. k is neighborhood size.
@@ -106,6 +110,31 @@ def useruser(userprof,peer_list):
 	# print("lcd is: ", lcd)
 	# print("occurrence: ", compiled_recipes[lcd])
 
+def useruserrate(idea, userprof, peer_list):
+	similar_peers = []
+	k = 5
+	for peer in peer_list:
+		sim = cosine_sim(userprof, peer.profile)
+		similar_peers.append([sim, peer])
+	similar_peers = sorted(similar_peers, key=lambda lst: lst[0], reverse = True)
+	# print(similar_peers)
+
+	num = 0
+	denom = 0
+	if int(idea) > 359:
+		return "Idea not in recipe database"
+
+	targetrec = recipe_names[idea]
+	for i in range(k):
+		peer = similar_peers[i][1]
+		if targetrec in peer.reciperatings:
+			num += similar_peers[i][0]*peer.reciperatings[targetrec]
+			denom += abs(similar_peers[i][0])
+
+	if denom == 0:
+		return None
+	else:
+		return num/denom
 
 def create_user():
 	user_history = []
@@ -152,7 +181,7 @@ def print_recipes_index():
 	for num in dict_keys:
 		print(int(num), ": ",recipe_names[num])
 
-print("What type of recommender would you like ('itemitem', 'useruser', or 'contentbased'): ")
+print("What type of recommender would you like ('itemitem', 'useruser', 'contentbased', or 'Hybrid'): ")
 system_type = input()
 
 if system_type == 'itemitem':
@@ -187,20 +216,46 @@ if system_type == 'itemitem':
 		print("You might want to keep looking :/")
 
 elif system_type == 'contentbased':
-	print_recipes_index()
-	print("Enter a recipe number from above to get a similar content-based recommendation: ")
-	base_recipe = input()
-	base_name = recipe_names[base_recipe]
-	print("You have selected recipe:", base_name)
-	base_profile = recipe_dict[base_name]['profile']
-	rec_list = contentrecommend(base_profile)
-	rec_list.remove(base_name)
-	print("Your top recommendation is:",rec_list[0])
-	cos_sim = cosine_sim(base_profile, recipe_dict[rec_list[0]]['profile'])
-	print("Cosine similarity between selection and recommendation (0 to 1):", str(cos_sim))
+	# print("Enter a recipe number from above to get a similar content-based recommendation: ")
+	# base_recipe = input()
+	# base_name = recipe_names[base_recipe]
+	# print("You have selected recipe:", base_name)
+	# base_profile = recipe_dict[base_name]['profile']
+	# rec_list = contentrecommend(base_profile)
+	# rec_list.remove(base_name)
+	# print("Your top recommendation is:",rec_list[0])
+	# cos_sim = cosine_sim(base_profile, recipe_dict[rec_list[0]]['profile'])
+	# print("Cosine similarity between selection and recommendation (0 to 1):", str(cos_sim))
 	#results = [(rec, cosine_sim(base_profile, recipe_dict[rec]['profile'])) for rec in rec_list]
 	#print(results)
 	#print(rec_list)
+
+	print_recipes_index()
+	print("How many recipes would you like to add to your recipe history?")
+	history_length = int(input())
+	history_lst = [0]*history_length
+
+	for i in range(history_length):
+		outpt = []
+		if i == 0:
+			print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
+		else:
+			print("Added! Pick another recipe. Enter one or more space-separated keywords:")
+		keywords = input().split(" ")
+		for word in keywords:
+			outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
+		print(outpt)
+		print("Pick one recipe from the selection above by entering the recipe number.")
+		history_lst[i] = int(input())
+
+	user_profile = [0]*profile_length
+	for current_recipe_name in history_lst:
+		recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
+		for i in range(profile_length):
+			user_profile[i] += recipe_profile[i]
+	user_profile = [x/profile_length for x in user_profile]
+
+	print("Top 5 Recommended Recipes:",contentrecommend(user_profile))
 
 elif system_type == 'useruser':
 	print_recipes_index()
@@ -257,7 +312,57 @@ elif system_type == 'Matrix Factorization':
 	# print(QR[1])
 	# for user in user_list:
 	# 	print(user.reciperatings)
+elif system_type == 'Hybrid':
+	alpha = 0.3333
+	beta = 0.3333
+	gamma = 0.3333
+	history_length = 0
+	while history_length < 5:
+		print("How many recipes would you like to add to your recipe history (at least 5)?")
+		history_length = int(input())
+		if history_length < 5:
+			print("Recipe history size too small. Let's try again.")
+	print_recipes_index()
+	history_lst = [[0,0]]*history_length
+	for i in range(history_length):
+		print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
+		history_lst[i] = [int(x) for x in input().split(" ")]
+	#print(history_lst)
+	print("Your inputted recipe names: rating'")
+	for item in history_lst:
+		print(recipe_names[str(item[0])]+": "+str(item[1]))
 
+	print("Now, enter the number of a recipe you'd like to try.")
+	idea = input()
+
+	## Creating dummy user profiles
+	user_list = smartusers.smart_user_list
+	# print(user_list)
+	for user in user_list:
+		userprofile(user)
+
+	user_profile = [0]*profile_length
+	for current_recipe_name, rating in history_lst:
+		recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
+		for i in range(profile_length):
+			user_profile[i] += recipe_profile[i]
+	user_profile = [x/profile_length for x in user_profile]
+
+	urating = useruserrate(idea, user_profile, user_list)
+	irating = itemitemcollab(idea, history_lst, 5)
+	crating = contentrate(user_profile, idea)
+	if urating == None:
+		rating = 0.5*irating + 0.5*crating
+	else:
+		rating = alpha*urating + beta*irating + gamma*crating
+
+	print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
+	if rating > 4:
+		print("It seems like you would love this recipe!")
+	elif rating > 3:
+		print("You might like this recipe.")
+	else:
+		print("You might want to keep looking :/")
 
 	# Create the user-rating matrix
 

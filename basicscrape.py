@@ -58,6 +58,8 @@ def contentrecommend(userprof):
 
 def itemitemcollab(idea, history, k):
 	# idea is the index of a recipe idea, history is the list of index and rating tuples of recipes cooked in the past. k is neighborhood size.
+	print("idea ", idea)
+	print("history", history)
 	reclist = []
 	userprof = recipe_dict[recipe_names[idea]]['profile']
 	history_length = len(history)
@@ -107,12 +109,6 @@ def create_user():
 		user_history.append(recipe_names[str(k)])
 	new_user = User(user_history)
 	return new_user
-# print(recipe_dict)
-# print(recipe_names)
-# print(recipe_list)
-# print("Available Selection:", recipe_names)
-# print("Select a recipe history using recipe indices above:")
-# indices = input()
 
 def print_recipes_index():
 	dict_keys = list(recipe_names.keys())
@@ -120,7 +116,6 @@ def print_recipes_index():
 	for num in dict_keys:
 		print(int(num), ": ",recipe_names[num])
 
-system_type = 'itemitem'
 print("What type of recommender would you like ('itemitem', 'useruser', or 'contentbased'): ")
 system_type = input()
 
@@ -130,9 +125,12 @@ if system_type == 'itemitem':
 	print_recipes_index()
 	history_lst = [[0,0]]*history_length
 	for i in range(history_length):
-		print("Enter a recipe number and rating from the above selection separated by a space.")
+		print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
 		history_lst[i] = [int(x) for x in input().split(" ")]
-	print(history_lst)
+	#print(history_lst)
+	print("Your inputted 'recipe names: rating'")
+	for item in history_lst:
+		print(recipe_names[str(item[0])]+": "+str(item[1]))
 	print("Now, enter the number of a recipe you'd like to try.")
 	idea = input()
 	rating = itemitemcollab(idea,history_lst,5)

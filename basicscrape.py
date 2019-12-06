@@ -181,146 +181,147 @@ def print_recipes_index():
 	for num in dict_keys:
 		print(int(num), ": ",recipe_names[num])
 
-print("What type of recommender would you like ('itemitem', 'useruser', 'contentbased', or 'Hybrid'): ")
-system_type = input()
+print("Enter 'recommend' if you would like to be recommended a new recipe or 'rate' if you would like a predicted rating on a recipe idea.")
+option = input()
+if option == 'recommend':
 
-if system_type == 'itemitem':
-	history_length = 0
-	while history_length < 5:
-		print("How many recipes would you like to add to your recipe history (at least 5)?")
-		history_length = int(input())
-		if history_length < 5:
-			print("Recipe history size too small. Let's try again.")
-	print_recipes_index()
-	history_lst = [[0,0]]*history_length
-	for i in range(history_length):
-		print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
-		history_lst[i] = [int(x) for x in input().split(" ")]
-	#print(history_lst)
-	print("Your inputted recipe names: rating'")
-	for item in history_lst:
-		print(recipe_names[str(item[0])]+": "+str(item[1]))
-	itemitemhistory = history_lst
-	print("history is ", itemitemhistory)
-	print("Now, enter the number of a recipe you'd like to try.")
-	idea = input()
+		print("What type of recommender would you like ('collaborative' or 'contentbased'): ")
+		system_type = input()
 
-	rating = itemitemcollab(idea, history_lst, 5)
+		if system_type == 'contentbased':
 
-	print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
-	if rating > 4:
-		print("It seems like you would love this recipe!")
-	elif rating > 3:
-		print("You might like this recipe.")
-	else:
-		print("You might want to keep looking :/")
+			print_recipes_index()
+			print("How many recipes would you like to add to your recipe history?")
+			history_length = int(input())
+			history_lst = [0]*history_length
 
-elif system_type == 'contentbased':
-	# print("Enter a recipe number from above to get a similar content-based recommendation: ")
-	# base_recipe = input()
-	# base_name = recipe_names[base_recipe]
-	# print("You have selected recipe:", base_name)
-	# base_profile = recipe_dict[base_name]['profile']
-	# rec_list = contentrecommend(base_profile)
-	# rec_list.remove(base_name)
-	# print("Your top recommendation is:",rec_list[0])
-	# cos_sim = cosine_sim(base_profile, recipe_dict[rec_list[0]]['profile'])
-	# print("Cosine similarity between selection and recommendation (0 to 1):", str(cos_sim))
-	#results = [(rec, cosine_sim(base_profile, recipe_dict[rec]['profile'])) for rec in rec_list]
-	#print(results)
-	#print(rec_list)
+			for i in range(history_length):
+				outpt = []
+				if i == 0:
+					print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
+				else:
+					print("Added! Pick another recipe. Enter one or more space-separated keywords:")
+				keywords = input().split(" ")
+				for word in keywords:
+					outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
+				print(outpt)
+				print("Pick one recipe from the selection above by entering the recipe number.")
+				history_lst[i] = int(input())
 
-	print_recipes_index()
-	print("How many recipes would you like to add to your recipe history?")
-	history_length = int(input())
-	history_lst = [0]*history_length
+			user_profile = [0]*profile_length
+			for current_recipe_name in history_lst:
+				recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
+				for i in range(profile_length):
+					user_profile[i] += recipe_profile[i]
+			user_profile = [x/profile_length for x in user_profile]
 
-	for i in range(history_length):
-		outpt = []
-		if i == 0:
-			print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
+			print("Top 5 Recommended Recipes:",contentrecommend(user_profile))
+
+		elif system_type == 'collaborative':
+			print_recipes_index()
+			print("Enter numeric keys for your favorite recipes, space-separated:")
+			history_nums_lst = input().split()
+			history_lst = [recipe_names[num] for num in history_nums_lst]
+			#print(history_lst)
+			## Creating dummy user profiles
+			user_list = [create_user() for i in range(20)]
+			# print(user_list)
+			for user in user_list:
+				userprofile(user)
+
+			user_profile = [0]*profile_length
+			for current_recipe_name in history_lst:
+				recipe_profile = recipe_dict[current_recipe_name]['profile']
+				for i in range(profile_length):
+					user_profile[i] += recipe_profile[i]
+			user_profile = [x/profile_length for x in user_profile]
+			rec_recipe = useruser(user_profile, user_list)
+			print("Recommended Recipe:",rec_recipe)
+			cos_sim = cosine_sim(user_profile, recipe_dict[rec_recipe]['profile'])
+			print("Similarity: ", cos_sim)
+
 		else:
-			print("Added! Pick another recipe. Enter one or more space-separated keywords:")
-		keywords = input().split(" ")
-		for word in keywords:
-			outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
-		print(outpt)
-		print("Pick one recipe from the selection above by entering the recipe number.")
-		history_lst[i] = int(input())
+			print("You'll have to run this program again and enter a string corresponding to the system you'd like to select.")
 
-	user_profile = [0]*profile_length
-	for current_recipe_name in history_lst:
-		recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
-		for i in range(profile_length):
-			user_profile[i] += recipe_profile[i]
-	user_profile = [x/profile_length for x in user_profile]
+if option == 'rate':
 
-	print("Top 5 Recommended Recipes:",contentrecommend(user_profile))
+	print("What type of rater would you like ('itemitem', 'useruser', 'contentbased', or 'Hybrid'): ")
+	system_type = input()
 
-elif system_type == 'useruser':
-	print_recipes_index()
-	print("Enter numeric keys for your favorite recipes, space-separated:")
-	history_nums_lst = input().split()
-	history_lst = [recipe_names[num] for num in history_nums_lst]
-	#print(history_lst)
-	## Creating dummy user profiles
-	user_list = [create_user() for i in range(20)]
-	# print(user_list)
-	for user in user_list:
-		userprofile(user)
+	if system_type == 'Hybrid':
+		alpha = 0.3333
+		beta = 0.3333
+		gamma = 0.3333
+		eta = 0.1
+		print("How many games do you want to play?")
+		iters = int(input())
+		while iters > 0:
+			iters -= 1
+			history_length = 0
+			while history_length < 5:
+				print("How many recipes would you like to add to your recipe history (at least 5)?")
+				history_length = int(input())
+				if history_length < 5:
+					print("Recipe history size too small. Let's try again.")
+			print_recipes_index()
+			history_lst = [[0,0]]*history_length
+			for i in range(history_length):
+				print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
+				history_lst[i] = [int(x) for x in input().split(" ")]
+			#print(history_lst)
+			print("Your inputted recipe names: rating'")
+			for item in history_lst:
+				print(recipe_names[str(item[0])]+": "+str(item[1]))
 
-	user_profile = [0]*profile_length
-	for current_recipe_name in history_lst:
-		recipe_profile = recipe_dict[current_recipe_name]['profile']
-		for i in range(profile_length):
-			user_profile[i] += recipe_profile[i]
-	user_profile = [x/profile_length for x in user_profile]
-	rec_recipe = useruser(user_profile, user_list)
-	print("Recommended Recipe:",rec_recipe)
-	cos_sim = cosine_sim(user_profile, recipe_dict[rec_recipe]['profile'])
-	print("Similarity: ", cos_sim)
+			print("Now, enter the number of a recipe you'd like to try.")
+			idea = input()
 
+			## Creating dummy user profiles
+			user_list = [create_user() for i in range(50)]
+			# print(user_list)
+			for user in user_list:
+				userprofile(user)
 
+			user_profile = [0]*profile_length
+			for current_recipe_name, rating in history_lst:
+				recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
+				for i in range(profile_length):
+					user_profile[i] += recipe_profile[i]
+			user_profile = [x/profile_length for x in user_profile]
 
-elif system_type == 'Matrix Factorization':
-	print("How many recipes would you like to add to your recipe history (at least 5)?")
-	history_length = int(input())
-	print("Selection: ", recipe_names)
-	history_lst = [[0,0]]*history_length
-	for i in range(history_length):
-		print("Enter a recipe number and rating from the above selection separated by a space.")
-		history_lst[i] = [int(x) for x in input().split(" ")]
-	print(history_lst)
-	actuallist = [x[0] for x in history_lst]
-	ouruser = User(actuallist,25)
-	ouruser.reciperatings = dict(history_lst)
-	print("Now, enter the number of a recipe you'd like to try.")
-	idea = int(input())
+			urating = useruserrate(idea, user_profile, user_list)
+			# print("urating is ", urating)
+			irating = itemitemcollab(idea, history_lst, 5)
+			crating = contentrate(user_profile, idea)
+			if urating == None:
+				rating = 0.5*irating + 0.5*crating
+			else:
+				rating = min(alpha*urating + beta*irating + gamma*crating,5)
 
-	user_list = smartusers.smart_user_list
-	user_list.append(ouruser)
-	matrx = makematrix(user_list)
-	QR = np.linalg.qr(matrx)
-	# print(QR[0].shape)
-	Q = QR[0]
-	R = QR[1]
-	Rt = np.transpose(R)
-	# print(QR[1].shape)
-	rating = np.dot(Q[-1],Rt[idea])
-	print(rating)
-	# print(rating)
-	# print(QR[1])
-	# for user in user_list:
-	# 	print(user.reciperatings)
-elif system_type == 'Hybrid':
-	alpha = 0.3333
-	beta = 0.3333
-	gamma = 0.3333
-	eta = 0.1
-	print("How many games do you want to play?")
-	iters = int(input())
-	while iters > 0:
-		iters -= 1
+			print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
+			if rating > 4:
+				print("It seems like you would love this recipe!")
+			print("-------------------------------------")
+			print("Nice job cooking! What was your actual rating for this recipe?")
+			actualrating = int(input())
+
+			# Learning Sequence. Increases the user-specific weight of ratings that were more accurate to the user's actual rating.
+			if actualrating != urating and urating != None:
+				alpha = min(alpha*eta/(actualrating - urating),0.8)
+				# print(alpha)
+			if actualrating != crating and urating != None:
+				beta = min(beta*eta/(actualrating - crating),0.8)
+				# print(beta)
+			if actualrating != irating and urating != None:
+				gamma = min(gamma*eta/(actualrating - irating),0.8)
+				# print(gamma)
+
+			rawweights = [alpha, beta, gamma]
+			normedweights = [i/sum(rawweights) for i in rawweights]
+			# print(normedweights)
+	else: 
+		# single iteration games
+
 		history_length = 0
 		while history_length < 5:
 			print("How many recipes would you like to add to your recipe history (at least 5)?")
@@ -332,20 +333,12 @@ elif system_type == 'Hybrid':
 		for i in range(history_length):
 			print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
 			history_lst[i] = [int(x) for x in input().split(" ")]
-		#print(history_lst)
 		print("Your inputted recipe names: rating'")
 		for item in history_lst:
 			print(recipe_names[str(item[0])]+": "+str(item[1]))
 
 		print("Now, enter the number of a recipe you'd like to try.")
 		idea = input()
-
-		## Creating dummy user profiles
-		user_list = [create_user() for i in range(50)]
-		# print(user_list)
-		for user in user_list:
-			userprofile(user)
-
 		user_profile = [0]*profile_length
 		for current_recipe_name, rating in history_lst:
 			recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
@@ -353,37 +346,48 @@ elif system_type == 'Hybrid':
 				user_profile[i] += recipe_profile[i]
 		user_profile = [x/profile_length for x in user_profile]
 
-		urating = useruserrate(idea, user_profile, user_list)
-		# print("urating is ", urating)
-		irating = itemitemcollab(idea, history_lst, 5)
-		crating = contentrate(user_profile, idea)
-		if urating == None:
-			rating = 0.5*irating + 0.5*crating
-		else:
-			rating = min(alpha*urating + beta*irating + gamma*crating,5)
+		if system_type == 'contentbased':
+			
+			rating = contentrate(user_profile, idea)
+
+		elif system_type == 'itemitem':
+
+			rating = itemitemcollab(idea, history_lst, 5)
+
+		elif system_type == 'useruser':
+			## Creating dummy user profiles
+			user_list = [create_user() for i in range(50)]
+			# print(user_list)
+			for user in user_list:
+				userprofile(user)
+
+			rating = useruserrate(idea, user_profile, user_list)
+
+		elif system_type == 'Matrix Factorization':
+
+			actuallist = [x[0] for x in history_lst]
+			ouruser = User(actuallist,25)
+			ouruser.reciperatings = dict(history_lst)
+
+			user_list = smartusers.smart_user_list
+			user_list.append(ouruser)
+			matrx = makematrix(user_list)
+			QR = np.linalg.qr(matrx)
+			# print(QR[0].shape)
+			Q = QR[0]
+			R = QR[1]
+			Rt = np.transpose(R)
+			# print(QR[1].shape)
+			rating = np.dot(Q[-1],Rt[idea])
 
 		print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
-		if rating > 4:
-			print("It seems like you would love this recipe!")
-		print("-------------------------------------")
-		print("Nice job cooking! What was your actual rating for this recipe?")
-		actualrating = int(input())
+			if rating > 4:
+				print("It seems like you would love this recipe!")
+			elif rating > 3:
+				print("You might like this recipe.")
+			else:
+				print("You might want to keep looking :/")
 
-		# Learning Sequence. Increases the user-specific weight of ratings that were more accurate to the user's actual rating.
-		if actualrating != urating and urating != None:
-			alpha = min(alpha*eta/(actualrating - urating),0.8)
-			# print(alpha)
-		if actualrating != crating and urating != None:
-			beta = min(beta*eta/(actualrating - crating),0.8)
-			# print(beta)
-		if actualrating != irating and urating != None:
-			gamma = min(gamma*eta/(actualrating - irating),0.8)
-			# print(gamma)
-
-		rawweights = [alpha, beta, gamma]
-		normedweights = [i/sum(rawweights) for i in rawweights]
-		# print(normedweights)
-
-else:
-	print("You'll have to run this program again and enter a string corresponding to the system you'd like to select.")
-	
+		else:
+			print("You'll have to run this program again and enter a string corresponding to the system you'd like to select.")
+		

@@ -15,6 +15,7 @@ recipe_list = []
 recipe_dict = json.load(open("recipe_dict.txt"))
 recipe_names = json.load(open("recipe_names.txt"))
 recipe_namesrev = {}
+itemitemhistory = []
 for number in recipe_names:
 	recipe_namesrev[recipe_names[number]] = number
 # print(recipe_namesrev)
@@ -60,8 +61,10 @@ def contentrecommend(userprof):
 
 def itemitemcollab(idea, history, k):
 	# idea is the index of a recipe idea, history is the list of index and rating tuples of recipes cooked in the past. k is neighborhood size.
+	global itemitemhistory
 	reclist = []
 	userprof = recipe_dict[recipe_names[idea]]['profile']
+	print("history is "), itemitemhistory
 	history_length = len(history)
 	for recipe, rating in history:
 		profile = recipe_dict[recipe_names[str(recipe)]]['profile']
@@ -107,7 +110,7 @@ def create_user():
 	for i in range(100):
 		k = random.randint(1,359)
 		user_history.append(recipe_names[str(k)])
-	new_user = User(user_history)
+	new_user = User(user_history,1)
 	return new_user
 
 def makematrix(userlist):
@@ -152,17 +155,24 @@ print("What type of recommender would you like ('itemitem', 'useruser', or 'cont
 system_type = input()
 
 if system_type == 'itemitem':
-	print("How many recipes would you like to add to your recipe history (at least 5)?")
-	history_length = int(input())
+	history_length = 0
+	while history_length <= 5:
+		print("How many recipes would you like to add to your recipe history (at least 5)?")
+		history_length = int(input())
+		if history_length <= 5:
+			print("Recipe history size too small. Let's try again.")
 	print_recipes_index()
 	history_lst = [[0,0]]*history_length
 	for i in range(history_length):
 		print("Enter a recipe number and rating from the above selection separated by a space.")
 		history_lst[i] = [int(x) for x in input().split(" ")]
-	print(history_lst)
+	itemitemhistory = history_lst
+	print("history is ", itemitemhistory)
 	print("Now, enter the number of a recipe you'd like to try.")
 	idea = input()
-	rating = itemitemcollab(idea,history_lst,5)
+
+	rating = itemitemcollab(idea, history_lst, 5)
+
 	print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
 	if rating > 4:
 		print("It seems like you would love this recipe!")
@@ -170,6 +180,22 @@ if system_type == 'itemitem':
 		print("You might like this recipe.")
 	else:
 		print("You might want to keep looking :/")
+
+elif system_type == 'contentbased':
+	print_recipes_index()
+	print("Enter a recipe number from above to get a similar content-based recommendation: ")
+	base_recipe = input()
+	base_name = recipe_names[base_recipe]
+	print("You have selected recipe:", base_name)
+	base_profile = recipe_dict[base_name]['profile']
+	rec_list = contentrecommend(base_profile)
+	rec_list.remove(base_name)
+	print("Your top recommendation is:",rec_list[0])
+	cos_sim = cosine_sim(base_profile, recipe_dict[rec_list[0]]['profile'])
+	print("Cosine similarity between selection and recommendation (0 to 1):", str(cos_sim))
+	#results = [(rec, cosine_sim(base_profile, recipe_dict[rec]['profile'])) for rec in rec_list]
+	#print(results)
+	#print(rec_list)
 
 elif system_type == 'useruser':
 	print_recipes_index()
@@ -299,19 +325,5 @@ else:
 =======
 	print(useruser(user_profile, user_list))
 	"""
-elif system_type == 'contentbased':
-	print_recipes_index()
-	print("Enter a recipe number from above to get a similar content-based recommendation: ")
-	base_recipe = input()
-	base_name = recipe_names[base_recipe]
-	print("You have selected recipe:", base_name)
-	base_profile = recipe_dict[base_name]['profile']
-	rec_list = contentrecommend(base_profile)
-	rec_list.remove(base_name)
-	print("Your top recommendation is:",rec_list[0])
-	cos_sim = cosine_sim(base_profile, recipe_dict[rec_list[0]]['profile'])
-	print("Cosine similarity between selection and recommendation (0 to 1):", str(cos_sim))
-	#results = [(rec, cosine_sim(base_profile, recipe_dict[rec]['profile'])) for rec in rec_list]
-	#print(results)
-	#print(rec_list)
+
 	

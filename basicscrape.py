@@ -187,7 +187,7 @@ if option == 'recommend':
 			for i in range(history_length):
 				outpt = []
 				if i == 0:
-					print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
+					print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords (e.g. indian, thai, in lowercase):")
 				else:
 					print("Added! Pick another recipe. Enter one or more space-separated keywords:")
 				keywords = input().strip().split(" ")
@@ -246,7 +246,7 @@ if option == 'rate':
 		beta = 0.3333
 		gamma = 0.3333
 		eta = 0.1
-		print("How many games do you want to play?")
+		print("How many iterations of the system do you want to run?")
 		iters = int(input())
 		while iters > 0:
 			iters -= 1

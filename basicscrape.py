@@ -278,7 +278,7 @@ elif system_type == 'useruser':
 	rec_recipe = useruser(user_profile, user_list)
 	print("Recommended Recipe:",rec_recipe)
 	cos_sim = cosine_sim(user_profile, recipe_dict[rec_recipe]['profile'])
-	print(cos_sim)
+	print("Similarity: ", cos_sim)
 
 
 
@@ -316,141 +316,74 @@ elif system_type == 'Hybrid':
 	alpha = 0.3333
 	beta = 0.3333
 	gamma = 0.3333
-	history_length = 0
-	while history_length < 5:
-		print("How many recipes would you like to add to your recipe history (at least 5)?")
-		history_length = int(input())
-		if history_length < 5:
-			print("Recipe history size too small. Let's try again.")
-	print_recipes_index()
-	history_lst = [[0,0]]*history_length
-	for i in range(history_length):
-		print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
-		history_lst[i] = [int(x) for x in input().split(" ")]
-	#print(history_lst)
-	print("Your inputted recipe names: rating'")
-	for item in history_lst:
-		print(recipe_names[str(item[0])]+": "+str(item[1]))
+	eta = 0.1
+	print("How many games do you want to play?")
+	iters = int(input())
+	while iters > 0:
+		iters -= 1
+		history_length = 0
+		while history_length < 5:
+			print("How many recipes would you like to add to your recipe history (at least 5)?")
+			history_length = int(input())
+			if history_length < 5:
+				print("Recipe history size too small. Let's try again.")
+		print_recipes_index()
+		history_lst = [[0,0]]*history_length
+		for i in range(history_length):
+			print("Enter a recipe number and rating (1-5) from the above selection separated by a space.")
+			history_lst[i] = [int(x) for x in input().split(" ")]
+		#print(history_lst)
+		print("Your inputted recipe names: rating'")
+		for item in history_lst:
+			print(recipe_names[str(item[0])]+": "+str(item[1]))
 
-	print("Now, enter the number of a recipe you'd like to try.")
-	idea = input()
+		print("Now, enter the number of a recipe you'd like to try.")
+		idea = input()
 
-	## Creating dummy user profiles
-	user_list = smartusers.smart_user_list
-	# print(user_list)
-	for user in user_list:
-		userprofile(user)
+		## Creating dummy user profiles
+		user_list = [create_user() for i in range(50)]
+		# print(user_list)
+		for user in user_list:
+			userprofile(user)
 
-	user_profile = [0]*profile_length
-	for current_recipe_name, rating in history_lst:
-		recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
-		for i in range(profile_length):
-			user_profile[i] += recipe_profile[i]
-	user_profile = [x/profile_length for x in user_profile]
+		user_profile = [0]*profile_length
+		for current_recipe_name, rating in history_lst:
+			recipe_profile = recipe_dict[recipe_names[str(current_recipe_name)]]['profile']
+			for i in range(profile_length):
+				user_profile[i] += recipe_profile[i]
+		user_profile = [x/profile_length for x in user_profile]
 
-	urating = useruserrate(idea, user_profile, user_list)
-	irating = itemitemcollab(idea, history_lst, 5)
-	crating = contentrate(user_profile, idea)
-	if urating == None:
-		rating = 0.5*irating + 0.5*crating
-	else:
-		rating = alpha*urating + beta*irating + gamma*crating
+		urating = useruserrate(idea, user_profile, user_list)
+		# print("urating is ", urating)
+		irating = itemitemcollab(idea, history_lst, 5)
+		crating = contentrate(user_profile, idea)
+		if urating == None:
+			rating = 0.5*irating + 0.5*crating
+		else:
+			rating = min(alpha*urating + beta*irating + gamma*crating,5)
 
-	print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
-	if rating > 4:
-		print("It seems like you would love this recipe!")
-	elif rating > 3:
-		print("You might like this recipe.")
-	else:
-		print("You might want to keep looking :/")
+		print("Your expected rating for "+ recipe_names[idea] + " is ", rating)
+		if rating > 4:
+			print("It seems like you would love this recipe!")
+		print("-------------------------------------")
+		print("Nice job cooking! What was your actual rating for this recipe?")
+		actualrating = int(input())
 
-	# Create the user-rating matrix
+		# Learning Sequence. Increases the user-specific weight of ratings that were more accurate to the user's actual rating.
+		if actualrating != urating and urating != None:
+			alpha = min(alpha*eta/(actualrating - urating),0.8)
+			# print(alpha)
+		if actualrating != crating and urating != None:
+			beta = min(beta*eta/(actualrating - crating),0.8)
+			# print(beta)
+		if actualrating != irating and urating != None:
+			gamma = min(gamma*eta/(actualrating - irating),0.8)
+			# print(gamma)
+
+		rawweights = [alpha, beta, gamma]
+		normedweights = [i/sum(rawweights) for i in rawweights]
+		# print(normedweights)
 
 else:
-	print("How many recipes would you like to add to your recipe history?")
-	history_length = int(input())
-	history_lst = [0]*history_length
-
-	for i in range(history_length):
-		outpt = []
-		if i == 0:
-			print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords:")
-		else:
-			print("Added! Pick another recipe. Enter one or more space-separated keywords:")
-		keywords = input().split(" ")
-		for word in keywords:
-			# print("word is: ", word)
-			# print(recipe_dict.keys())
-			outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
-		print(outpt)
-		print("Pick one recipe from the selection above by entering the recipe number.")
-		history_lst[i] = int(input())
-	## Creating dummy user profiles
-	user_list = [create_user() for i in range(20)]
-	# print(user_list)
-	for user in user_list:
-		userprofile(user)
-
-	user_profile = [0]*profile_length
-	for current_recipe_name in history_lst:
-		recipe_profile = recipe_dict[current_recipe_name]['profile']
-		for i in range(profile_length):
-			user_profile[i] += recipe_profile[i]
-	user_profile = [x/profile_length for x in user_profile]
-	rec_recipe = useruser(user_profile, user_list)
-	print("Recommended Recipe:",rec_recipe)
-	cos_sim = cosine_sim(user_profile, recipe_dict[rec_recipe]['profile'])
-	print(cos_sim)
-
-# elif system_type == 'useruser': # User-User
-# 	print("How many recipes would you like to add to your recipe history?")
-# 	history_length = int(input())
-# 	history_lst = [0]*history_length
-
-
-
-
-# 	# for i in range(history_length):
-# 	# 	outpt = []
-	# 	if i == 0:
-	# 		print("Great! What kind of recipe would you like to enter? Enter one or more space-separated keywords in lowercase:")
-	# 	else:
-	# 		print("Added! Pick another recipe. Enter one or more space-separated keywords:")
-	# 	keywords = input().split(" ")
-	# 	for word in keywords:
-	# 		# print("word is: ", word)
-	# 		# print(recipe_dict.keys())
-	# 		outpt.extend([(recipe_namesrev[s],s) for s in recipe_namesrev.keys() if word in s.lower()])
-	# 	print(outpt)
-	# 	print("Pick one recipe from the selection above by entering the recipe number.")
-	# 	history_lst[i] = int(input())
-	# print(history_lst)
-	# history_lst = [int(x) for x in indices.split(" ")]
-	# print(history_lst)
-
-	# user_list = [create_user() for i in range(20)]
-	user_list = smartusers.smart_user_list
-
-	"""
-	user_list = [create_user() for i in range(20)]
->>>>>>> d58d5de2fb46007cb8d4a73a4c93c0f514a0a78d
-	# print(user_list)
-	for user in user_list:
-		userprofile(user)
-
-	user_profile = [0]*profile_length
-	for index in history_lst:
-		recipe_profile = recipe_dict[recipe_list[index]]['profile']
-		for i in range(profile_length):
-			user_profile[i] += recipe_profile[i]
-
-	user_profile = [x/profile_length for x in user_profile]
-
-	print("Content Recommendation: ", contentrecommend(user_profile))
-<<<<<<< HEAD
-	print("User-User CBF Recommendation: ", useruser(user_profile, user_list))
-=======
-	print(useruser(user_profile, user_list))
-	"""
-
+	print("You'll have to run this program again and enter a string corresponding to the system you'd like to select.")
 	

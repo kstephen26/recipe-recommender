@@ -51,7 +51,7 @@ smart_user_list.extend([create_smart_user('thai',i) for i in range(5,9)])
 smart_user_list.extend([create_smart_user('italian',i) for i in range(9,13)])
 smart_user_list.extend([create_smart_user('cake',i) for i in range(13,17)])
 smart_user_list.extend([create_smart_user('easy',i) for i in range(17,21)])
-smart_user_list.extend([create_smart_user('cookies',i) for i in range(21,25)])
+smart_user_list.extend([create_smart_user('cookies',i) for i in range(21,2)])
 
 # with open('smartusers.txt', 'w') as f:
 #     for user in user_list:

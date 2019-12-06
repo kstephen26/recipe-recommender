@@ -113,12 +113,21 @@ def create_user():
 # print("Select a recipe history using recipe indices above:")
 # indices = input()
 
+def print_recipes_index():
+	dict_keys = list(recipe_names.keys())
+	dict_keys.sort(key = lambda x: int(x))
+	for num in dict_keys:
+		print(int(num), ": ",recipe_names[num])
+
+
+
 system_type = 'Item-Item'
 
 if system_type == 'Item-Item':
 	print("How many recipes would you like to add to your recipe history (at least 5)?")
 	history_length = int(input())
-	print("Selection: ", recipe_names)
+	#print("Selection: ", recipe_names)
+	print(print_recipes_index())
 	history_lst = [[0,0]]*history_length
 	for i in range(history_length):
 		print("Enter a recipe number and rating from the above selection separated by a space.")
